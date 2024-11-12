@@ -11,7 +11,7 @@ app.use(express.json());
 app.use(cors({ origin: '*' }));
 
 // MongoDB 연결 설정
-const url = process.env.MONGODB_URI || 'mongodb://localhost:1000';
+const url = process.env.MONGODB_URI || 'mongodb://localhost:27017';  // 포트 변경
 const dbName = 'yogiTarget';
 let db;
 
