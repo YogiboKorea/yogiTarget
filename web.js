@@ -1,7 +1,6 @@
 require('dotenv').config();
 const express = require('express');
 const { MongoClient, ObjectId } = require('mongodb');
-const path = require('path');
 const cors = require('cors');
 const app = express();
 const PORT = 5001;
@@ -11,7 +10,7 @@ app.use(express.json());
 app.use(cors({ origin: '*' }));
 
 // MongoDB 연결 설정
-const url = process.env.MONGODB_URI || 'mongodb://localhost:27017';  // 포트 변경
+const url = process.env.MONGODB_URI || 'mongodb://localhost:27017';  // MongoDB 포트 확인
 const dbName = 'yogiTarget';
 let db;
 
@@ -43,6 +42,33 @@ app.post('/event-click', async (req, res) => {
     } catch (error) {
         console.error('Failed to save event:', error);
         res.status(500).json({ error: 'Failed to save event to MongoDB' });
+    }
+});
+
+// 특정 날짜 범위의 클릭 데이터를 조회하는 API
+app.get('/event-click', async (req, res) => {
+    const { startDate, endDate } = req.query;
+
+    if (!startDate || !endDate) {
+        return res.status(400).json({ error: 'startDate and endDate query parameters are required' });
+    }
+
+    try {
+        const collection = db.collection('clickEvents');
+        const start = new Date(startDate);
+        const end = new Date(new Date(endDate).setHours(23, 59, 59, 999)); // 해당 종료일의 마지막 시간 포함
+
+        const events = await collection.find({
+            timestamp: {
+                $gte: start,
+                $lte: end
+            }
+        }).toArray();
+
+        res.status(200).json(events);
+    } catch (error) {
+        console.error('Failed to retrieve events:', error);
+        res.status(500).json({ error: 'Failed to retrieve events from MongoDB' });
     }
 });
 
