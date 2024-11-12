@@ -44,32 +44,32 @@ app.post('/event-click', async (req, res) => {
         res.status(500).json({ error: 'Failed to save event to MongoDB' });
     }
 });
-
 // 특정 날짜 범위의 클릭 데이터를 조회하는 API
 app.get('/event-click', async (req, res) => {
-    const { startDate, endDate } = req.query;
+  const { startDate, endDate } = req.query;
 
-    if (!startDate || !endDate) {
-        return res.status(400).json({ error: 'startDate and endDate query parameters are required' });
-    }
+  try {
+      const collection = db.collection('clickEvents');
 
-    try {
-        const collection = db.collection('clickEvents');
-        const start = new Date(startDate);
-        const end = new Date(new Date(endDate).setHours(23, 59, 59, 999)); // 해당 종료일의 마지막 시간 포함
+      // 시작 날짜와 종료 날짜가 없으면 모든 데이터 반환
+      let query = {};
+      if (startDate && endDate) {
+          const start = new Date(startDate);
+          const end = new Date(new Date(endDate).setHours(23, 59, 59, 999));
+          query = {
+              timestamp: {
+                  $gte: start,
+                  $lte: end
+              }
+          };
+      }
 
-        const events = await collection.find({
-            timestamp: {
-                $gte: start,
-                $lte: end
-            }
-        }).toArray();
-
-        res.status(200).json(events);
-    } catch (error) {
-        console.error('Failed to retrieve events:', error);
-        res.status(500).json({ error: 'Failed to retrieve events from MongoDB' });
-    }
+      const events = await collection.find(query).toArray();
+      res.status(200).json(events);
+  } catch (error) {
+      console.error('Failed to retrieve events:', error);
+      res.status(500).json({ error: 'Failed to retrieve events from MongoDB' });
+  }
 });
 
 // 서버 시작
