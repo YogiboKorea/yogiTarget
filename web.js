@@ -5,12 +5,12 @@ const cors = require('cors');
 const app = express();
 const PORT = 5001;
 
-// JSON 형식 파일 전송 예정
+// JSON 형식 파일 전송
 app.use(express.json());
 app.use(cors({ origin: '*' }));
 
 // MongoDB 연결 설정
-const url = process.env.MONGODB_URI || 'mongodb://localhost:27017';  // MongoDB 포트 확인
+const url = process.env.MONGODB_URI || 'mongodb://localhost:27017';
 const dbName = 'yogiTarget';
 let db;
 
@@ -35,7 +35,7 @@ app.post('/event-click', async (req, res) => {
 
     try {
         const collection = db.collection('clickEvents');
-        const result = await collection.insertOne({ event, timestamp });
+        const result = await collection.insertOne({ event, timestamp: new Date(timestamp) });
 
         console.log('Event stored in MongoDB:', result);
         res.status(201).json({ message: 'Event saved successfully', data: result });
@@ -44,6 +44,7 @@ app.post('/event-click', async (req, res) => {
         res.status(500).json({ error: 'Failed to save event to MongoDB' });
     }
 });
+
 // 특정 날짜 범위의 클릭 데이터를 조회하는 API
 app.get('/event-click', async (req, res) => {
   const { startDate, endDate } = req.query;
@@ -51,11 +52,12 @@ app.get('/event-click', async (req, res) => {
   try {
       const collection = db.collection('clickEvents');
 
-      // 시작 날짜와 종료 날짜가 없으면 모든 데이터 반환
+      // 쿼리 기본값: 모든 데이터 반환
       let query = {};
       if (startDate && endDate) {
           const start = new Date(startDate);
           const end = new Date(new Date(endDate).setHours(23, 59, 59, 999));
+
           query = {
               timestamp: {
                   $gte: start,
