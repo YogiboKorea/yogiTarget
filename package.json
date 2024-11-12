@@ -1,7 +1,7 @@
 {
   "name": "yogi_target",
   "version": "1.0.0",
-  "main": "index.js",
+  "main": "web.js",
   "scripts": {
     "starg":"node web js"
   },
