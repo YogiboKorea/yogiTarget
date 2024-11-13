@@ -1,3 +1,4 @@
+require('dotenv').config();
 const express = require('express');
 const { MongoClient } = require('mongodb');
 const cors = require('cors');
@@ -8,7 +9,8 @@ const PORT = 5001;
 app.use(express.json());
 app.use(cors({ origin: '*' }));
 
-const url = process.env.MONGODB_URI || 'mongodb://localhost:27017';
+// MongoDB 연결 설정
+const url = process.env.MONGODB_URI || 'mongodb://127.0.0.1:27017';
 const dbName = 'yogiTarget';
 let db;
 
@@ -21,6 +23,45 @@ MongoClient.connect(url, { useNewUrlParser: true, useUnifiedTopology: true })
     console.error('Failed to connect to MongoDB:', error);
     process.exit(1);
   });
+
+// 클릭 이벤트 저장 API
+app.post('/event-click', async (req, res) => {
+    const { event, timestamp } = req.body;
+    if (!event || !timestamp) {
+        return res.status(400).json({ error: 'Event type and timestamp are required' });
+    }
+
+    try {
+        const collection = db.collection('clickEvents');
+        const result = await collection.insertOne({ event, timestamp: new Date(timestamp) });
+        console.log('Event stored in MongoDB:', result);
+        res.status(201).json({ message: 'Event saved successfully', data: result });
+    } catch (error) {
+        console.error('Failed to save event:', error);
+        res.status(500).json({ error: 'Failed to save event to MongoDB' });
+    }
+});
+
+// 날짜 범위 내 데이터 조회 API
+app.get('/event-click', async (req, res) => {
+  const { startDate, endDate } = req.query;
+
+  try {
+      const collection = db.collection('clickEvents');
+      let query = {};
+      if (startDate && endDate) {
+          const start = new Date(startDate);
+          const end = new Date(new Date(endDate).setHours(23, 59, 59, 999));
+          query = { timestamp: { $gte: start, $lte: end } };
+      }
+
+      const events = await collection.find(query).toArray();
+      res.status(200).json(events);
+  } catch (error) {
+      console.error('Failed to retrieve events:', error);
+      res.status(500).json({ error: 'Failed to retrieve events from MongoDB' });
+  }
+});
 
 // 엑셀 다운로드 엔드포인트
 app.get('/event-click/download', async (req, res) => {
@@ -38,6 +79,7 @@ app.get('/event-click/download', async (req, res) => {
 
     const events = await collection.find(query).toArray();
 
+    // 엑셀 데이터 형식으로 변환
     const data = [["날짜", "구매하기 클릭", "장바구니 클릭"]];
     const dateCounts = {};
 
@@ -68,5 +110,5 @@ app.get('/event-click/download', async (req, res) => {
 });
 
 app.listen(PORT, () => {
-  console.log(`SERVER OPEN on http://localhost:${PORT}`);
+    console.log(`SERVER OPEN on http://localhost:${PORT}`);
 });
