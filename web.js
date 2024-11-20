@@ -55,7 +55,10 @@ app.get('/event-click', async (req, res) => {
           query = { timestamp: { $gte: start, $lte: end } };
       }
 
+      console.log('Query:', query); // 디버깅 로그 추가
       const events = await collection.find(query).toArray();
+      console.log('Fetched events:', events); // 디버깅 로그 추가
+
       res.status(200).json(events);
   } catch (error) {
       console.error('Failed to retrieve events:', error);
