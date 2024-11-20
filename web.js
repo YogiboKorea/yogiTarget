@@ -67,25 +67,30 @@ app.get('/event-click', async (req, res) => {
 });
 
 // 엑셀 다운로드 엔드포인트
+// 엑셀 다운로드 엔드포인트
 app.get('/event-click/download', async (req, res) => {
   const { startDate, endDate } = req.query;
 
+  if (!startDate || !endDate) {
+    return res.status(400).json({ error: 'Start date and end date are required' });
+  }
+
   try {
     const collection = db.collection('clickEvents');
-    let query = {};
-
-    if (startDate && endDate) {
-      const start = new Date(startDate);
-      const end = new Date(new Date(endDate).setHours(23, 59, 59, 999));
-      query = { timestamp: { $gte: start, $lte: end } };
-    }
+    const start = new Date(startDate);
+    const end = new Date(new Date(endDate).setHours(23, 59, 59, 999));
+    const query = { timestamp: { $gte: start, $lte: end } };
 
     const events = await collection.find(query).toArray();
 
-    // 엑셀 데이터 형식으로 변환
-    const data = [["날짜", "구매하기 클릭", "장바구니 클릭"]];
+    // 날짜 범위에 클릭률 0 초기화
     const dateCounts = {};
+    for (let d = start; d <= end; d.setDate(d.getDate() + 1)) {
+      const date = d.toISOString().split('T')[0];
+      dateCounts[date] = { yogi_buy: 0, yogi_cart: 0 };
+    }
 
+    // 이벤트 데이터를 날짜별로 집계
     events.forEach(event => {
       const date = new Date(event.timestamp).toISOString().split('T')[0];
       if (!dateCounts[date]) {
@@ -94,8 +99,10 @@ app.get('/event-click/download', async (req, res) => {
       dateCounts[date][event.event]++;
     });
 
+    // 엑셀 데이터 변환
+    const data = [["날짜", "구매하기 클릭", "장바구니 클릭"]];
     Object.keys(dateCounts).forEach(date => {
-      data.push([date, dateCounts[date].yogi_buy || 0, dateCounts[date].yogi_cart || 0]);
+      data.push([date, dateCounts[date].yogi_buy, dateCounts[date].yogi_cart]);
     });
 
     const ws = XLSX.utils.aoa_to_sheet(data);
