@@ -100,7 +100,7 @@ app.get('/event-click/download', async (req, res) => {
     });
 
     // 엑셀 데이터 변환
-    const data = [["날짜", "구매하기 클릭", "장바구니 클릭"]];
+    const data = [["날짜", "웹 클릭", "모바일 클릭"]];
     Object.keys(dateCounts).forEach(date => {
       data.push([date, dateCounts[date].yogi_buy, dateCounts[date].yogi_cart]);
     });
