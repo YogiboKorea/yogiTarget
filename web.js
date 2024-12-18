@@ -24,7 +24,7 @@ MongoClient.connect(url, { useNewUrlParser: true, useUnifiedTopology: true })
   });
 
 // 차단할 IP 목록 데이터 추가하기
-const BLOCKED_IPS = ['10.31.50.28', '111.222.333.444']; // 차단하고 싶은 IP 추가
+const BLOCKED_IPS = ['10.31.50.28', '61.99.75.10']; // 차단하고 싶은 IP 추가
 
 // IP 차단 미들웨어
 app.use((req, res, next) => {
