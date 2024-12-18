@@ -13,7 +13,6 @@ app.use(cors({ origin: '*' }));
 const url = process.env.MONGODB_URI || 'mongodb://127.0.0.1:27017';
 const dbName = 'yogiTarget';
 let db;
-
 MongoClient.connect(url, { useNewUrlParser: true, useUnifiedTopology: true })
   .then(client => {
     console.log('Connected to MongoDB');
@@ -24,7 +23,7 @@ MongoClient.connect(url, { useNewUrlParser: true, useUnifiedTopology: true })
     process.exit(1);
   });
 
-// 차단할 IP 목록
+// 차단할 IP 목록 데이터 추가하기
 const BLOCKED_IPS = ['10.31.50.28', '111.222.333.444']; // 차단하고 싶은 IP 추가
 
 // IP 차단 미들웨어
